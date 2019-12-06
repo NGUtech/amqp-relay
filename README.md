@@ -1,5 +1,5 @@
 # AMQP notification relay plugin for c-lightning
-This plugin may be useful for your consumer application to process notification from an array
+This plugin may be useful for your consumer application to process notifications from an array
 of lightning nodes or ensuring that no notifcations are missed in case of an application failure.
 
 This has been tested with RabbitMQ.
@@ -20,7 +20,7 @@ This plugin connects to an AMQP exchange specified with startup options as follo
  - `amqp-host`: the host address in address:port format
  - `amqp-auth`: the optional service credentials in user:pass format
  - `amqp-exchange`: the name of the exchange you wish to send through
- - `amqp-notifications`: a comma seperated list of notification to relay
+ - `amqp-notifications`: a comma seperated list of notifications to relay
 
 It will attempt reconnection every 10 seconds on startup if a host, exchange & notification list are provided.
 
