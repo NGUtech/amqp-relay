@@ -1,0 +1,15 @@
+{
+  "name": "amqp-relay",
+  "version": "0.0.1",
+  "description": "AMQP notification relay plugin for C-lightning",
+  "main": "amqp-relay.js",
+  "author": "MrHash",
+  "homepage": "https://github.com/MrHash",
+  "license": "MPL-2.0",
+  "private": true,
+  "dependencies": {
+    "amqplib": "^0.5.5",
+    "clightningjs": "^0.1.1",
+    "zeromq": "^5.1.1"
+  }
+}
