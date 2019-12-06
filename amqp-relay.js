@@ -30,6 +30,8 @@ relayPlugin.onInit = function(params) {
   if (host && exchange && Object.keys(enabledNotifications).length > 0) {
     connectQueue();
     connectionInterval = setInterval(connectQueue, 10000);
+  } else {
+    relayPlugin.log('Plugin is installed but not enabled');
   }
 
   return true;
