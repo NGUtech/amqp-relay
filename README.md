@@ -7,7 +7,6 @@ This has been tested with RabbitMQ.
 ## Dependencies
  - `clightningjs`[https://github.com/darosior/clightningjs]
  - `amqplib`[https://github.com/squaremo/amqp.node]
- - `zermomq`[https://github.com/zeromq/zeromq.js/]
 
 ## Installation
  - Clone plugin to your c-lightning plugin directory.
