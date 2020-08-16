@@ -1,15 +1,22 @@
 {
   "name": "amqp-relay",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "AMQP notification relay plugin for C-lightning",
   "main": "amqp-relay.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NGUtech/amqp-relay.git"
+  },
   "author": "MrHash",
-  "homepage": "https://github.com/NGUtech",
   "license": "MPL-2.0",
   "private": true,
+  "bugs": {
+    "url": "https://github.com/NGUtech/amqp-relay/issues"
+  },
+  "homepage": "https://github.com/NGUtech/amqp-relay#readme",
   "dependencies": {
     "amqplib": "^0.5.6",
-    "clightningjs": "^0.1.1",
+    "clightningjs": "^0.2.2",
     "zeromq": "^5.1.1"
   }
 }

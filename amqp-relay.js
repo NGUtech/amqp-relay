@@ -31,7 +31,7 @@ relayPlugin.onInit = function(params) {
     connectQueue();
     connectionInterval = setInterval(connectQueue, 10000);
   } else {
-    relayPlugin.log('Plugin is installed but not enabled');
+    relayPlugin.log('Plugin is installed but not enabled.');
   }
 
   return true;
@@ -60,7 +60,8 @@ function connectQueue() {
 
 function publish(event, message) {
   if (amqp && enabledNotifications[event] === true) {
-    amqp.publish(exchange, 'clightning.'+event, Buffer.from(JSON.stringify(message)));
+    const eventJson = JSON.stringify(message);
+    amqp.publish(exchange, 'lightningd.message.'+event, Buffer.from(eventJson));
   }
 }
 
@@ -73,15 +74,19 @@ relayPlugin.subscribe('channel_opened');
 relayPlugin.subscribe('connect');
 relayPlugin.subscribe('disconnect');
 relayPlugin.subscribe('invoice_payment');
+relayPlugin.subscribe('invoice_creation');
 relayPlugin.subscribe('forward_event');
 relayPlugin.subscribe('sendpay_success');
 relayPlugin.subscribe('sendpay_failure');
+relayPlugin.subscribe('coin_movement');
 relayPlugin.notifications.channel_opened.on('channel_opened', message => {publish('channel_opened', message)});
 relayPlugin.notifications.connect.on('connect', message => {publish('connect', message)});
 relayPlugin.notifications.disconnect.on('disconnect', message => {publish('disconnect', message)});
+relayPlugin.notifications.invoice_creation.on('invoice_creation', message => {publish('invoice_creation', message)});
 relayPlugin.notifications.invoice_payment.on('invoice_payment', message => {publish('invoice_payment', message)});
 relayPlugin.notifications.forward_event.on('forward_event', message => {publish('forward_event', message)});
 relayPlugin.notifications.sendpay_success.on('sendpay_success', message => {publish('sendpay_success', message)});
 relayPlugin.notifications.sendpay_failure.on('sendpay_failure', message => {publish('sendpay_failure', message)});
+relayPlugin.notifications.coin_movement.on('coin_movement', message => {publish('coin_movement', message)});
 
 relayPlugin.start();
