@@ -5,7 +5,7 @@ of lightning nodes or ensuring that no notifcations are missed in case of an app
 This has been tested with RabbitMQ.
 
 ## Dependencies
- - `clightningjs`[https://github.com/darosior/clightningjs]
+ - `clightningjs`[https://github.com/lightningd/clightningjs]
  - `amqplib`[https://github.com/squaremo/amqp.node]
 
 ## Installation
@@ -19,6 +19,7 @@ This plugin connects to an AMQP exchange specified with startup options as follo
  - `amqp-host`: the host address in address:port format
  - `amqp-auth`: the optional service credentials in user:pass format
  - `amqp-exchange`: the name of the exchange you wish to send through
+ - `amqp-delay`: an optional relay delay in ms (suitable for `x-delayed-message` type exchanges)
  - `amqp-notifications`: a comma seperated list of notifications to relay. Notification types are [listed here](https://lightning.readthedocs.io/PLUGINS.html#notification-types). Note also that `warning` notifications are not implemented yet.
 
 It will attempt reconnection every 10 seconds on startup if a host, exchange & notification list are provided.

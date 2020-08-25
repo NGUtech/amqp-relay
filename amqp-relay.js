@@ -3,7 +3,7 @@ const amqplib = require('amqplib/callback_api');
 const Plugin = require('clightningjs');
 
 const relayPlugin = new Plugin();
-let amqp, auth, host, exchange, connectionInterval;
+let amqp, auth, host, exchange, delay, connectionInterval;
 let enabledNotifications = {};
 
 relayPlugin.onInit = function(params) {
@@ -17,6 +17,10 @@ relayPlugin.onInit = function(params) {
 
   if (params.options['amqp-exchange'] !== 'off') {
     exchange = params.options['amqp-exchange'];
+  }
+
+  if (params.options['amqp-delay'] !== 'off') {
+     delay = params.options['amqp-delay'];
   }
 
   if (params.options['amqp-notifications'] !== 'off') {
@@ -52,7 +56,15 @@ function connectQueue() {
       }
       amqp = ch;
       clearInterval(connectionInterval);
-      ch.assertExchange(exchange, 'topic', {durable: true, autoDelete: false});
+      if (delay > 0) {
+        ch.assertExchange(exchange, 'x-delayed-message', {
+          durable: true,
+          autoDelete: false,
+          arguments: {'x-delayed-type': 'topic'}}
+        );
+      } else {
+        ch.assertExchange(exchange, 'topic', {durable: true, autoDelete: false});
+      }
       relayPlugin.log('AMQP channel connection established.');
     })
   });
@@ -61,13 +73,15 @@ function connectQueue() {
 function publish(event, message) {
   if (amqp && enabledNotifications[event] === true) {
     const eventJson = JSON.stringify(message);
-    amqp.publish(exchange, 'lightningd.message.'+event, Buffer.from(eventJson));
+    const headers = delay > 0 ? {headers: {'x-delay': delay}} : {};
+    amqp.publish(exchange, 'lightningd.message.'+event, Buffer.from(eventJson), headers);
   }
 }
 
 relayPlugin.addOption('amqp-auth', 'off', 'AMQP service user:pass credentials', 'string');
 relayPlugin.addOption('amqp-host', 'off', 'AMQP service host:port address', 'string');
 relayPlugin.addOption('amqp-exchange', 'off', 'AMQP service target exchange', 'string');
+relayPlugin.addOption('amqp-delay', 'off', 'AMQP message relay delay (in ms)', 'int');
 relayPlugin.addOption('amqp-notifications', 'off', 'AMQP notification relay list', 'string');
 
 relayPlugin.subscribe('channel_opened');
