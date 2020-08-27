@@ -19,6 +19,7 @@ This plugin connects to an AMQP exchange specified with startup options as follo
  - `amqp-host`: the host address in address:port format
  - `amqp-auth`: the optional service credentials in user:pass format
  - `amqp-exchange`: the name of the exchange you wish to send through
+ - `amqp-prefix`: an optional message prefix for routing (default is `lightningd.message.`)
  - `amqp-delay`: an optional relay delay in ms (suitable for `x-delayed-message` type exchanges)
  - `amqp-notifications`: a comma seperated list of notifications to relay. Notification types are [listed here](https://lightning.readthedocs.io/PLUGINS.html#notification-types). Note also that `warning` notifications are not implemented yet.
 

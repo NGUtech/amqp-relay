@@ -1,6 +1,6 @@
 {
   "name": "amqp-relay",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "AMQP notification relay plugin for C-lightning",
   "main": "amqp-relay.js",
   "repository": {

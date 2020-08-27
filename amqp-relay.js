@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-const amqplib = require('amqplib/callback_api');
+const amqplib = require('amqplib');
 const Plugin = require('clightningjs');
 
 const relayPlugin = new Plugin();
 let amqp, auth, host, exchange, delay, connectionInterval;
+let prefix = 'lightningd.message.';
 let enabledNotifications = {};
 
 relayPlugin.onInit = function(params) {
@@ -23,6 +24,10 @@ relayPlugin.onInit = function(params) {
      delay = params.options['amqp-delay'];
   }
 
+  if (params.options['amqp-prefix'] !== 'off') {
+    prefix = params.options['amqp-prefix'];
+  }
+
   if (params.options['amqp-notifications'] !== 'off') {
     params.options['amqp-notifications'].split(',').forEach(
       event => {
@@ -32,55 +37,52 @@ relayPlugin.onInit = function(params) {
   }
 
   if (host && exchange && Object.keys(enabledNotifications).length > 0) {
-    connectQueue();
-    connectionInterval = setInterval(connectQueue, 10000);
+    connectExchange();
+    connectionInterval = setInterval(connectExchange, 10000);
   } else {
-    relayPlugin.log('Plugin is installed but not enabled.');
+    relayPlugin.log('AMQP plugin is installed but not enabled');
   }
 
   return true;
 };
 
-function connectQueue() {
+function connectExchange() {
   relayPlugin.log('Connecting to AMQP service at ' + host);
   const endpoint = auth ? auth+'@'+host : host;
-  amqplib.connect('amqp://'+endpoint, function(err, conn) {
-    if (err != null) {
-      relayPlugin.log('AMQP connection error: '+err.code);
-      return;
-    }
-    conn.createChannel(function(err, ch) {
-      if (err != null) {
-        relayPlugin.log('AMQP channel error: '+err.code);
-        return;
+  amqplib.connect('amqp://' + endpoint)
+  .then(conn => conn.createChannel())
+  .then(ch => {
+    ch.on('error', err => {
+      amqp = null;
+      relayPlugin.log('AMQP channel error: ' + err.code);
+      if (!connectionInterval) {
+        connectionInterval = setInterval(connectExchange, 10000);
       }
+    });
+    ch.checkExchange(exchange).then(() => {
       amqp = ch;
       clearInterval(connectionInterval);
-      if (delay > 0) {
-        ch.assertExchange(exchange, 'x-delayed-message', {
-          durable: true,
-          autoDelete: false,
-          arguments: {'x-delayed-type': 'topic'}}
-        );
-      } else {
-        ch.assertExchange(exchange, 'topic', {durable: true, autoDelete: false});
-      }
-      relayPlugin.log('AMQP channel connection established.');
-    })
+      connectionInterval = false;
+      relayPlugin.log('AMQP channel established');
+    }).catch(err => {});
+  })
+  .catch(err => {
+    relayPlugin.log('AMQP connection error: ' + err.code);
   });
 }
 
 function publish(event, message) {
-  if (amqp && enabledNotifications[event] === true) {
+  if (amqp && !connectionInterval && enabledNotifications[event] === true) {
     const eventJson = JSON.stringify(message);
     const headers = delay > 0 ? {headers: {'x-delay': delay}} : {};
-    amqp.publish(exchange, 'lightningd.message.'+event, Buffer.from(eventJson), headers);
+    amqp.publish(exchange, prefix + event, Buffer.from(eventJson), headers);
   }
 }
 
 relayPlugin.addOption('amqp-auth', 'off', 'AMQP service user:pass credentials', 'string');
 relayPlugin.addOption('amqp-host', 'off', 'AMQP service host:port address', 'string');
 relayPlugin.addOption('amqp-exchange', 'off', 'AMQP service target exchange', 'string');
+relayPlugin.addOption('amqp-prefix', 'off', 'AMQP message routing prefix', 'string');
 relayPlugin.addOption('amqp-delay', 'off', 'AMQP message relay delay (in ms)', 'int');
 relayPlugin.addOption('amqp-notifications', 'off', 'AMQP notification relay list', 'string');
 
