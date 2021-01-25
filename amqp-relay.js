@@ -20,7 +20,7 @@ relayPlugin.onInit = function(params) {
     exchange = params.options['amqp-exchange'];
   }
 
-  if (params.options['amqp-delay'] !== 'off') {
+  if (params.options['amqp-delay'] !== 0) {
      delay = params.options['amqp-delay'];
   }
 
@@ -83,7 +83,7 @@ relayPlugin.addOption('amqp-auth', 'off', 'AMQP service user:pass credentials', 
 relayPlugin.addOption('amqp-host', 'off', 'AMQP service host:port address', 'string');
 relayPlugin.addOption('amqp-exchange', 'off', 'AMQP service target exchange', 'string');
 relayPlugin.addOption('amqp-prefix', 'off', 'AMQP message routing prefix', 'string');
-relayPlugin.addOption('amqp-delay', 'off', 'AMQP message relay delay (in ms)', 'int');
+relayPlugin.addOption('amqp-delay', 0, 'AMQP message relay delay (in ms)', 'int');
 relayPlugin.addOption('amqp-notifications', 'off', 'AMQP notification relay list', 'string');
 
 relayPlugin.subscribe('channel_opened');
