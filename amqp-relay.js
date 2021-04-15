@@ -72,6 +72,7 @@ function connectExchange() {
 }
 
 function publish(event, message) {
+  relayPlugin.log('Got evant: ' + event + ", with message: " + JSON.stringify(message));
   if (amqp && !connectionInterval && enabledNotifications[event] === true) {
     const eventJson = JSON.stringify(message);
     const headers = delay > 0 ? {headers: {'x-delay': delay}} : {};
