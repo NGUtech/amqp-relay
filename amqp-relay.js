@@ -94,8 +94,9 @@ function connectExchange() {
 }
 
 function publish(event, message) {
-  relayPlugin.log('Got evant: ' + event + ", with message: " + JSON.stringify(message));
+  relayPlugin.log('Got event: ' + event + ", with message: " + JSON.stringify(message));
   if (amqp && !connectionInterval && enabledNotifications[event] === true) {
+    relayPlugin.log('Publishing event' + event);
     const eventJson = JSON.stringify(message);
     const headers = delay > 0 ? { headers: { 'x-delay': delay } } : {};
     amqp.publish(exchange, prefix + event, Buffer.from(eventJson), headers);
