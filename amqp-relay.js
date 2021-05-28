@@ -3,29 +3,39 @@ const amqplib = require('amqplib');
 const Plugin = require('clightningjs');
 
 const relayPlugin = new Plugin();
-let amqp, auth, host, exchange, delay, connectionInterval;
+let amqp, username, password, hostname, port, exchange, delay, connectionInterval, vhost;
 let prefix = 'lightningd.message.';
 let enabledNotifications = {};
 
 relayPlugin.onInit = function (params) {
   if (params.options['amqp-host'] !== 'off') {
-    host = params.options['amqp-host'];
+    [hostname, port] = params.options['amqp-host'].split(':');
+    relayPlugin.log('AMQP-relay: hostname = ' + hostname + ', port = ' + port);
   }
 
   if (params.options['amqp-auth'] !== 'off') {
-    auth = params.options['amqp-auth'];
+    [username, password] = params.options['amqp-auth'].split(':');
+    relayPlugin.log('AMQP-relay: username = ' + username + ', password = ' + password);
   }
 
   if (params.options['amqp-exchange'] !== 'off') {
     exchange = params.options['amqp-exchange'];
+    relayPlugin.log('AMQP-relay: exchange = ' + exchange);
   }
 
   if (params.options['amqp-delay'] !== 0) {
     delay = params.options['amqp-delay'];
+    relayPlugin.log('AMQP-relay: delay = ' + delay);
   }
 
   if (params.options['amqp-prefix'] !== 'off') {
     prefix = params.options['amqp-prefix'];
+    relayPlugin.log('AMQP-relay: prefix = ' + prefix);
+  }
+
+  if (params.options['amqp-vhost'] !== 'off') {
+    vhost = params.options['amqp-vhost'];
+    relayPlugin.log('AMQP-relay: vhost = ' + vhost);
   }
 
   if (params.options['amqp-notifications'] !== 'off') {
@@ -34,46 +44,52 @@ relayPlugin.onInit = function (params) {
         enabledNotifications[event] = true;
       }
     );
+    relayPlugin.log('AMQP-relay: enabled notifications = ' + enabledNotifications);
   }
 
-  if (host && exchange && Object.keys(enabledNotifications).length > 0) {
+  if (hostname && exchange && Object.keys(enabledNotifications).length > 0) {
     connectExchange();
     connectionInterval = setInterval(connectExchange, 10000);
   } else {
-    relayPlugin.log('AMQP plugin is installed but not enabled');
+    relayPlugin.log('AMQP-relay: AMQP plugin is installed but not enabled');
   }
 
   return true;
 };
 
 function connectExchange() {
-  relayPlugin.log('Connecting to AMQP service at ' + host);
-  const endpoint = auth ? auth + '@' + host : host;
-  amqplib.connect('amqp://' + endpoint)
+  relayPlugin.log('AMQP-relay: Connecting to AMQP service at ' + hostname + ':' + port);
+  // const endpoint = auth ? auth + '@' + host : host;
+  amqplib.connect({
+    username: username,
+    password: password,
+    hostname: hostname,
+    port: port,
+    vhost: vhost})
     .then(conn => conn.createChannel())
     .then(ch => {
       ch.on('error', err => {
         amqp = null;
-        relayPlugin.log('AMQP channel error: ' + err.code);
+        relayPlugin.log('AMQP-relay: AMQP channel error: ' + err.code);
         if (!connectionInterval) {
           connectionInterval = setInterval(connectExchange, 10000);
         }
       });
       ch.assertExchange(exchange, "topic", { durable: true })
         .then(() => {
-          relayPlugin.log('Created exchange ' + exchange);
+          relayPlugin.log('AMQP-relay: Created exchange ' + exchange);
           return ch.checkExchange(exchange);
         })
         .then(() => {
           amqp = ch;
           clearInterval(connectionInterval);
           connectionInterval = false;
-          relayPlugin.log('AMQP channel established');
+          relayPlugin.log('AMQP-relay: AMQP channel established');
         })
         .catch(err => { relayPlugin.log(err); });
     })
     .catch(err => {
-      relayPlugin.log('AMQP connection error: ' + err.code);
+      relayPlugin.log('AMQP-relay: AMQP connection error: ' + err.code);
     });
 }
 
@@ -92,6 +108,7 @@ relayPlugin.addOption('amqp-exchange', 'off', 'AMQP service target exchange', 's
 relayPlugin.addOption('amqp-prefix', 'off', 'AMQP message routing prefix', 'string');
 relayPlugin.addOption('amqp-delay', 0, 'AMQP message relay delay (in ms)', 'int');
 relayPlugin.addOption('amqp-notifications', 'off', 'AMQP notification relay list', 'string');
+relayPlugin.addOption('amqp-vhost', 'off', 'AMQP virtual host name', 'string');
 
 relayPlugin.subscribe('channel_opened');
 relayPlugin.subscribe('connect');
