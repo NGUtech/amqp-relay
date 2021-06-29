@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 const amqplib = require('amqplib');
 const Plugin = require('clightningjs');
 
@@ -99,7 +100,12 @@ function publish(event, message) {
     relayPlugin.log('Publishing event' + event);
     const eventJson = JSON.stringify(message);
     const headers = delay > 0 ? { headers: { 'x-delay': delay } } : {};
-    amqp.publish(exchange, prefix + event, Buffer.from(eventJson), headers);
+    amqp.publish(exchange, prefix + event, Buffer.from(eventJson), headers)
+      .catch(err => {
+        if (!connectionInterval) {
+          connectionInterval = setInterval(connectExchange, 10000);
+        }
+      });
   }
 }
 
