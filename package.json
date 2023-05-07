@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/NGUtech/amqp-relay#readme",
   "dependencies": {
-    "amqplib": "^0.5.6",
+    "amqplib": "^0.10.3",
     "clightningjs": "lightningd/clightningjs"
   }
 }
